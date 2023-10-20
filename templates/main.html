@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="/static/safe.css">    
+    <script src="/static/safe.js"></script>
+  </head>
+<body>
+  <div id="general">
+    {{if .Error}}
+      {{.Error}}
+    {{else}}
+      <div class="handle"> {{.Handle}} </div>
+      <div class="confirmed"> {{if .Live}} live {{else}} pending {{end}}  </div>
+      <div class="attorneys">Attorneys</div>
+      {{range .Attorneys}}
+        <p class="attorney"> {{.}} </p>
+      {{end}}
+    {{end}}
+    <a href="/grant">grant poa </a>
+    <a href="/revoke">revoke poa </a>
+    <a href="/signout"> log off </a>
+  </div>
+</body>
+</html>
