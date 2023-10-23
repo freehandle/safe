@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/freehandle/breeze/crypto"
@@ -26,11 +27,21 @@ func NewServer(host string, hostToken crypto.Token, port int) chan error {
 		log.Fatalf("could not connect to host: %v", err)
 	}
 
+	usersFile, err := os.OpenFile("users.dat", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		panic(err)
+	}
+
 	safe := &Safe{
+		file:    usersFile,
 		epoch:   0,
 		conn:    conn,
-		users:   make(map[string]*User),
+		users:   ReadUsers(usersFile),
 		Session: api.OpenCokieStore("cookies.dat", nil),
+	}
+
+	for handle, user := range safe.users {
+		fmt.Printf("%v: %+v", handle, *user)
 	}
 
 	signal := make(chan *Signal)

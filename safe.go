@@ -6,44 +6,21 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/freehandle/axe/attorney"
 	"github.com/freehandle/breeze/crypto"
+	"github.com/freehandle/breeze/util"
 	"github.com/freehandle/synergy/api"
 
 	"github.com/freehandle/breeze/socket"
 )
 
-type User struct {
-	Handle    string
-	Password  string
-	Secret    crypto.PrivateKey
-	Token     crypto.Token
-	Attorneys []crypto.Token
-	Confirmed bool
-}
-
-func (a *User) GrantPower(grant *attorney.GrantPowerOfAttorney) {
-	for _, grantee := range a.Attorneys {
-		if grantee.Equal(grant.Attorney) {
-			return
-		}
-	}
-	a.Attorneys = append(a.Attorneys, grant.Attorney)
-}
-
-func (a *User) RevokePower(revoke *attorney.RevokePowerOfAttorney) {
-	for n, grantee := range a.Attorneys {
-		if grantee.Equal(revoke.Attorney) {
-			a.Attorneys = append(a.Attorneys[:n], a.Attorneys[n+1:]...)
-			return
-		}
-	}
-}
-
 type Safe struct {
+	file      *os.File
 	epoch     uint64
 	conn      *socket.SignedConnection
 	users     map[string]*User
@@ -141,17 +118,14 @@ func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
 		return errors.New("invalid attorney")
 	}
 	copy(token[:], attorneyBytes)
-	fingerprintBytes, err := hex.DecodeString(fingerprint)
-	if err != nil {
-		return errors.New("invalid fingerprint")
-	}
 	grant := attorney.GrantPowerOfAttorney{
 		Epoch:       0,
 		Author:      user.Secret.PublicKey(),
 		Attorney:    token,
-		Fingerprint: fingerprintBytes,
+		Fingerprint: []byte(fingerprint),
 	}
 	grant.Sign(user.Secret)
+	fmt.Printf("%+v\n", grant)
 	data := grant.Serialize()
 	s.Send(data)
 	return nil
@@ -193,7 +167,7 @@ func (s *Safe) Signin(handle, password string) bool {
 	}
 	join := attorney.JoinNetwork{
 		Epoch:   0,
-		Author:  secret.PublicKey(),
+		Author:  token,
 		Handle:  handle,
 		Details: "",
 	}
@@ -201,5 +175,53 @@ func (s *Safe) Signin(handle, password string) bool {
 	fmt.Printf("%+v\n", join)
 	data := join.Serialize()
 	fmt.Println(data)
+
+	bytes := make([]byte, 0)
+	util.PutSecret(secret, &bytes)
+	util.PutToken(token, &bytes)
+	util.PutString(handle, &bytes)
+	util.PutString(password, &bytes)
+
+	size := make([]byte, 0)
+	util.PutUint16(uint16(len(bytes)), &size)
+	bytes = append(size, bytes...)
+
+	s.file.Seek(0, 2)
+	if n, err := s.file.Write(bytes); n != len(bytes) {
+		panic(err)
+	}
+
 	return s.Send(data)
+}
+
+func ReadUsers(file *os.File) map[string]*User {
+	data, err := io.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+	position := 0
+	users := make(map[string]*User)
+	for {
+		position = position + 2
+		var pk crypto.PrivateKey
+		var token crypto.Token
+		var handle string
+		var password string
+		pk, position = util.ParseSecret(data, position)
+		token, position = util.ParseToken(data, position)
+		handle, position = util.ParseString(data, position)
+		fmt.Println("---------->", handle, position)
+		password, position = util.ParseString(data, position)
+		users[handle] = &User{
+			Handle:    handle,
+			Password:  password,
+			Secret:    pk,
+			Token:     token,
+			Attorneys: make([]crypto.Token, 0),
+		}
+		if position >= len(data) {
+			break
+		}
+	}
+	return users
 }
