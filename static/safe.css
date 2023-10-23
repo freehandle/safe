@@ -1,0 +1,29 @@
+* {
+    padding: 0;
+    margin: 0;
+    outline: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url('../static/Lato-Thin.ttf');
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url('../static/Lato-Regular.ttf');
+    font-weight: 300;
+}
+
+
+#general {
+    width: max(100vw, 70rem);
+    height: 100vh;
+    background-color: white; 
+    display: flex;
+    flex-direction: column;
+    font-family: "Lato";
+    color: #012169;
+}
