@@ -8,9 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/freehandle/breeze/consensus/chain"
 	"github.com/freehandle/breeze/socket"
-	"github.com/freehandle/breeze/util"
 	"github.com/freehandle/synergy/api"
 )
 
@@ -23,18 +21,18 @@ func NewServer(config SafeConfig, path string) chan error {
 	finalize := make(chan error, 2)
 
 	//_, safePK := crypto.RandomAsymetricKey()
-	conn, err := socket.Dial(config.AxeAddress, config.Credentials, config.AxeToken)
-	if err != nil {
-		finalize <- fmt.Errorf("could not connect to axe host: %v", err)
-		return finalize
-	}
+	//conn, err := socket.Dial(config.AxeAddress, config.Credentials, config.AxeToken)
+	//if err != nil {
+	//	finalize <- fmt.Errorf("could not connect to axe host: %v", err)
+	//	return finalize
+	//}
 
-	bytes := []byte{chain.MsgSyncRequest}
-	util.PutUint64(1, &bytes)
-	if err := conn.Send(bytes); err != nil {
-		finalize <- fmt.Errorf("could not send sync request to gateway host: %v", err)
-		return finalize
-	}
+	//bytes := []byte{chain.MsgSyncRequest}
+	//util.PutUint64(1, &bytes)
+	//if err := conn.Send(bytes); err != nil {
+	//	finalize <- fmt.Errorf("could not send sync request to gateway host: %v", err)
+	//	return finalize
+	//}
 
 	gatewayConn, err := socket.Dial(config.GatewayAddress, config.Credentials, config.GatewayToken)
 	if err != nil {
@@ -53,10 +51,6 @@ func NewServer(config SafeConfig, path string) chan error {
 		users:       ReadUsers(usersFile),
 		Session:     api.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), nil),
 		credentials: config.Credentials,
-	}
-
-	for handle, user := range safe.users {
-		fmt.Printf("%v: %+v", handle, *user)
 	}
 
 	signal := make(chan *Signal)

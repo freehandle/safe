@@ -1,7 +1,6 @@
 package safe
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/freehandle/axe/attorney"
@@ -38,19 +37,16 @@ func NewSynergyNode(safe *Safe, signals chan *Signal) {
 				case attorney.GrantPowerOfAttorneyType:
 					grant := attorney.ParseGrantPowerOfAttorney(signal.Data)
 					if grant != nil {
-						fmt.Printf("granting: %+v\n", *grant)
 						safe.IncorporateGrant(grant)
 					}
 				case attorney.RevokePowerOfAttorneyType:
 					revoke := attorney.ParseRevokePowerOfAttorney(signal.Data)
 					if revoke != nil {
-						fmt.Printf("revoking: %+v\n", *revoke)
 						safe.IncorporateRevoke(revoke)
 					}
 				case attorney.JoinNetworkType:
 					join := attorney.ParseJoinNetwork(signal.Data)
 					if join != nil {
-						fmt.Printf("joining: %+v", *join)
 						safe.IncorporateJoin(join)
 					}
 				}

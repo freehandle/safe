@@ -1,7 +1,6 @@
 package safe
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/freehandle/breeze/crypto"
@@ -47,7 +46,6 @@ func SelfProxyState(conn *socket.SignedConnection, signal chan *Signal) {
 				log.Print("invalid epoch message")
 			}
 		} else if data[0] == 1 {
-			fmt.Println("tem mensagem aqui")
 			if len(data) > 1 {
 				signal <- &Signal{
 					Signal: 1,
@@ -55,7 +53,6 @@ func SelfProxyState(conn *socket.SignedConnection, signal chan *Signal) {
 				}
 			}
 		} else if data[0] == 2 {
-			fmt.Println("blocoooo")
 			blocks := ParseMultiBlocks(data)
 			if len(blocks) == 0 {
 				log.Printf("invalid multiblocv: %v", err)
@@ -70,7 +67,6 @@ func SelfProxyState(conn *socket.SignedConnection, signal chan *Signal) {
 					Data:   epochBytes,
 				}
 				for _, action := range block.actions {
-					fmt.Println("tem mensagem aqui tb")
 					signal <- &Signal{
 						Signal: 1,
 						Data:   action,

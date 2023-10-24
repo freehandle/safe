@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -56,10 +55,8 @@ func (s *Safe) CreateSession(handle string) string {
 func (s *Safe) CheckCredentials(handle, password string) bool {
 	user, ok := s.users[handle]
 	if !ok {
-		fmt.Println("user not found", handle, password, s.users)
 		return false
 	}
-	fmt.Println("user found", user.Password, password, user.Password == password)
 	return user.Password == password
 }
 
@@ -141,7 +138,6 @@ func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
 		Fingerprint: []byte(fingerprint),
 	}
 	grant.Sign(user.Secret)
-	fmt.Printf("%+v\n", grant)
 	data := grant.Serialize()
 	s.Send(data)
 	return nil
@@ -188,10 +184,7 @@ func (s *Safe) Signin(handle, password string) bool {
 		Details: "",
 	}
 	join.Sign(secret)
-	fmt.Printf("%+v\n", join)
 	data := join.Serialize()
-	fmt.Println(data)
-
 	bytes := make([]byte, 0)
 	util.PutSecret(secret, &bytes)
 	util.PutToken(token, &bytes)
@@ -226,7 +219,6 @@ func ReadUsers(file *os.File) map[string]*User {
 		pk, position = util.ParseSecret(data, position)
 		token, position = util.ParseToken(data, position)
 		handle, position = util.ParseString(data, position)
-		fmt.Println("---------->", handle, position)
 		password, position = util.ParseString(data, position)
 		users[handle] = &User{
 			Handle:    handle,
