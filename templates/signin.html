@@ -6,17 +6,38 @@
   </head>
 <body>
   <div id="general">
-    <form method="post" action="/newuser">
-      <div>
-        <label  for="handle">handle</label>
-        <input class="text" name="handle" id="handle"/> 
+    <div id="header">
+      <div class="signinrow">
+        <a href="/login"> login </a> | <span class="bold"> sigin </span>
       </div>
-      <div>
-        <label for="password">password</label>
-        <input class="text" type="password" name="password" id="password"/> 
-      </div>
-      <input class="click" type="submit" value="send"/>
-  </form>
+    </div>
+    <div id="bulk">
+      <form method="post" action="/newuser">
+        <div class="title xlarge bold"> sign in </div>
+        <div class="formitem">
+          <label class="formlabel" for="handle">handle</label>
+          <input class="text" name="handle" id="handle"/> 
+        </div>
+        <div class="formitem">
+          <label class="formlabel" for="password">email</label>
+          <input class="text" type="password" name="email" id="email"/> 
+        </div>
+
+        <div class="formitem">
+          <label class="formlabel" for="password">password</label>
+          <input class="text" type="password" name="password" id="password"/> 
+        </div>
+        <div class="formitem">
+          <label class="formlabel" for="password">confirm password</label>
+          <input class="text" type="password" name="repassword" id="repassword"/> 
+        </div>
+        
+        <input class="click" type="submit" value="send"/>
+        <div class="footer">
+          <p> Alguma frase para falar pro usuário do que se trata </p>
+        </div>  
+      </form>
+    </div>
   </div>
 </body>
 </html>

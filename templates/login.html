@@ -6,18 +6,28 @@
   </head>
 <body>
   <div id="general">
-    <form method="post" action="/credentials">
-      <div>
-        <label  for="handle">handle</label>
-        <input class="text" name="handle" id="handle"/> 
+    <div id="header">
+      <div class="signinrow">
+         <span class="bold"> log in </span> | <a href="/signin"> sign in </a>
       </div>
-      <div>
-        <label for="password">password</label>
-        <input class="text" type="password" name="password" id="password"/> 
-      </div>
-      <input class="click" type="submit" value="send"/>
-  </form>
-  <a href="/signin">sign in </a>
+    </div>
+    <div id="bulk">
+      <form method="post" action="/credentials">
+        <div class="title xlarge bold"> log in </div>
+        <div class="formitem">
+          <label class="formlabel" for="handle">handle</label>
+          <input class="text" name="handle" id="handle"/> 
+        </div>
+        <div class="formitem">
+          <label class="formlabel" for="password">password</label>
+          <input class="text" type="password" name="password" id="password"/> 
+        </div>
+        <div class="resetpassword">
+          <a href="/resetpassword"> forgot my password</a>
+        </div>
+        <input class="click" type="submit" value="send"/>
+      </form>
+    </div>
   </div>
 </body>
 </html>

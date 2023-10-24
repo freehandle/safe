@@ -1,4 +1,4 @@
-package main
+package safe
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/freehandle/breeze/crypto"
 	"github.com/freehandle/breeze/socket"
 	"github.com/freehandle/synergy/api"
 )
@@ -17,14 +16,19 @@ var templateFiles = []string{
 	"main", "grant", "revoke", "login", "signin",
 }
 
-func NewServer(host string, hostToken crypto.Token, port int) chan error {
+func NewServer(config SafeConfig, path string) chan error {
 
 	finalize := make(chan error, 2)
 
-	_, safePK := crypto.RandomAsymetricKey()
-	conn, err := socket.Dial(host, safePK, hostToken)
+	//_, safePK := crypto.RandomAsymetricKey()
+	conn, err := socket.Dial(config.AxeAddress, config.Credentials, config.AxeToken)
 	if err != nil {
 		log.Fatalf("could not connect to host: %v", err)
+	}
+
+	gatewayConn, err := socket.Dial(config.GatewayAddress, config.Credentials, config.GatewayToken)
+	if err != nil {
+		log.Fatalf("could not connect to gateway: %v", err)
 	}
 
 	usersFile, err := os.OpenFile("users.dat", os.O_RDWR|os.O_CREATE, 0666)
@@ -35,9 +39,9 @@ func NewServer(host string, hostToken crypto.Token, port int) chan error {
 	safe := &Safe{
 		file:    usersFile,
 		epoch:   0,
-		conn:    conn,
+		conn:    gatewayConn,
 		users:   ReadUsers(usersFile),
-		Session: api.OpenCokieStore("cookies.dat", nil),
+		Session: api.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), nil),
 	}
 
 	for handle, user := range safe.users {
@@ -52,7 +56,7 @@ func NewServer(host string, hostToken crypto.Token, port int) chan error {
 	safe.templates = template.New("root")
 	files := make([]string, len(templateFiles))
 	for n, file := range templateFiles {
-		files[n] = fmt.Sprintf("./templates/%v.html", file)
+		files[n] = fmt.Sprintf("%v/templates/%v.html", path, file)
 	}
 	t, err := template.ParseFiles(files...)
 	if err != nil {
@@ -61,20 +65,20 @@ func NewServer(host string, hostToken crypto.Token, port int) chan error {
 	safe.templates = t
 
 	mux := http.NewServeMux()
-	fs := http.FileServer(http.Dir("./static"))
+	fs := http.FileServer(http.Dir(fmt.Sprintf("%v/static", path)))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 	mux.HandleFunc("/", safe.UserHandler)
 	mux.HandleFunc("/login", safe.LoginHandler)
 	mux.HandleFunc("/signin", safe.SigninHandler)
 	mux.HandleFunc("/credentials", safe.CredentialsHandler)
 	mux.HandleFunc("/newuser", safe.NewUserHandler)
-	mux.HandleFunc("/grant", safe.GrantHandler)
-	mux.HandleFunc("/revoke", safe.RevokeHandler)
+	//mux.HandleFunc("/grant", safe.GrantHandler)
+	mux.HandleFunc("/revoke/", safe.RevokePOAHandler)
 	mux.HandleFunc("/poa", safe.PoAHandler)
 	mux.HandleFunc("/signout", safe.SignoutHandlewr)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("localhost:%v", port),
+		Addr:         fmt.Sprintf("localhost:%v", config.Port),
 		Handler:      mux,
 		WriteTimeout: 2 * time.Second,
 	}

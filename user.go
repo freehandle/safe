@@ -1,4 +1,4 @@
-package main
+package safe
 
 import (
 	"github.com/freehandle/axe/attorney"

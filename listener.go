@@ -1,4 +1,4 @@
-package main
+package safe
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 type Gateway interface {
-	SendAction(action []byte) error
+	Send(action []byte) error
 }
 
 type Signal struct {
@@ -37,22 +37,20 @@ func NewSynergyNode(safe *Safe, signals chan *Signal) {
 				switch attorney.Kind(signal.Data) {
 				case attorney.GrantPowerOfAttorneyType:
 					grant := attorney.ParseGrantPowerOfAttorney(signal.Data)
-					fmt.Println("grant message")
 					if grant != nil {
-						fmt.Printf("%+v\n", *grant)
+						fmt.Printf("granting: %+v\n", *grant)
 						safe.IncorporateGrant(grant)
 					}
 				case attorney.RevokePowerOfAttorneyType:
 					revoke := attorney.ParseRevokePowerOfAttorney(signal.Data)
-					fmt.Println("grant message")
 					if revoke != nil {
-						fmt.Printf("%+v\n", *revoke)
+						fmt.Printf("revoking: %+v\n", *revoke)
 						safe.IncorporateRevoke(revoke)
 					}
 				case attorney.JoinNetworkType:
 					join := attorney.ParseJoinNetwork(signal.Data)
 					if join != nil {
-						fmt.Printf("%+v", *join)
+						fmt.Printf("joining: %+v", *join)
 						safe.IncorporateJoin(join)
 					}
 				}

@@ -6,19 +6,48 @@
   </head>
 <body>
   <div id="general">
-    {{if .Error}}
-      {{.Error}}
-    {{else}}
-      <div class="handle"> {{.Handle}} </div>
-      <div class="confirmed"> {{if .Live}} live {{else}} pending {{end}}  </div>
-      <div class="attorneys">Attorneys</div>
-      {{range .Attorneys}}
-        <p class="attorney"> {{.}} </p>
-      {{end}}
-    {{end}}
-    <a href="/grant">grant poa </a>
-    <a href="/revoke">revoke poa </a>
-    <a href="/signout"> log off </a>
-  </div>
+    <div id="header">
+      <div class="signinrow">
+          <a class="bold" href="/signout"> log out </a>
+      </div>
+    </div>
+    <div id="mainbulk">
+      {{if .Error}}
+        {{.Error}}
+      {{else}}   
+        <div class="handle xlarge"> 
+          {{.Handle}}  
+          <span class="light large"> 
+            {{if .Live}} active {{else}} pending {{end}} 
+          </span> 
+        </div>
+        <div class="large bold mt">attorneys</div>
+        <div class="attorneylist">
+          {{range .Attorneys}}
+            <div class="attorneyrow">
+              <p class="attorney"> {{.}} </p>
+              <a class="revoke" href="/revoke/{{.}}">revoke</a>
+            </div>
+          {{end}}
+        </div>
+        <div class="large bold mt2">
+          add attorney
+        </div>
+        <div>
+          <form method="post" action="/poa">
+            <input name="poa" value="grant" type="hidden" readonly/>
+            <div>
+              <input id="attorney" class="text" name="attorney"/> 
+            </div>
+            <div>
+              <label for="password">finger print</label>
+              <input class="text" name="fingerprint"/> 
+            </div>
+            <input class="click" type="submit" value="grant"/>
+          </form>
+        </div>
+        {{end}}
+      </div>
+    <div>
 </body>
 </html>

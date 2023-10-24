@@ -1,4 +1,4 @@
-package main
+package safe
 
 import (
 	"crypto/rand"
@@ -15,14 +15,21 @@ import (
 	"github.com/freehandle/breeze/crypto"
 	"github.com/freehandle/breeze/util"
 	"github.com/freehandle/synergy/api"
-
-	"github.com/freehandle/breeze/socket"
 )
+
+type SafeConfig struct {
+	GatewayAddress string
+	GatewayToken   crypto.Token
+	AxeAddress     string
+	AxeToken       crypto.Token
+	Port           int
+	Credentials    crypto.PrivateKey
+}
 
 type Safe struct {
 	file      *os.File
 	epoch     uint64
-	conn      *socket.SignedConnection
+	conn      Gateway //*socket.SignedConnection
 	users     map[string]*User
 	Session   *api.CookieStore
 	templates *template.Template
@@ -47,8 +54,10 @@ func (s *Safe) CreateSession(handle string) string {
 func (s *Safe) CheckCredentials(handle, password string) bool {
 	user, ok := s.users[handle]
 	if !ok {
+		fmt.Println("user not found", handle, password, s.users)
 		return false
 	}
+	fmt.Println("user found", user.Password, password, user.Password == password)
 	return user.Password == password
 }
 

@@ -1,6 +1,6 @@
-package main
+package safe
 
-import (
+/*import (
 	"fmt"
 
 	"github.com/freehandle/breeze/crypto"
@@ -13,3 +13,4 @@ func main() {
 	err := <-NewServer("localhost:4100", gatewayPK.PublicKey(), 7000)
 	fmt.Println(err)
 }
+*/

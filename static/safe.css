@@ -5,6 +5,26 @@
     box-sizing: border-box;
 }
 
+a {
+    text-decoration: none;
+    color: #012169;
+}
+
+a:visited {
+    text-decoration: none;
+    color: #012169;
+}
+
+
+a:hover {
+    font-weight: 900;
+}
+
+
+body {
+    font-family: 'Lato';
+}
+
 @font-face {
     font-family: 'Lato';
     src: url('../static/Lato-Thin.ttf');
@@ -13,17 +33,183 @@
 
 @font-face {
     font-family: 'Lato';
+    src: url('../static/Lato-Light.ttf');
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'Lato';
     src: url('../static/Lato-Regular.ttf');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Lato';
+    src: url('../static/Lato-Bold.ttf');
+    font-weight: 700;
+}
+
+.light {
     font-weight: 300;
 }
 
 
+#header{
+    display: inline-block;
+    background-color: #AFC7FE;
+    color: #012169;
+}
+
+
 #general {
-    width: max(100vw, 70rem);
-    height: 100vh;
+    width: 100%;
     background-color: white; 
     display: flex;
     flex-direction: column;
     font-family: "Lato";
     color: #012169;
 }
+
+.bold {
+    font-weight: 700;
+}
+
+#header .signinrow {
+    font-size: 1.2em;
+    width: 100%;
+    text-align: right;
+    padding: 1em;
+    
+}
+
+#bulk{
+    display: flex;
+    justify-content: center;
+}
+
+#bulk form {
+    margin-top: 5em;
+    width: 30em;
+    font-size: 1.2em;
+    display: block;
+}
+
+.text {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+    font-family: "Lato";
+    width: 100%;
+    padding: 0.25rem;
+    margin: 0.75rem 0.313rem 0.625rem 0.0rem;
+    background-color: #DBFFE9;
+    border: none;
+    color: #009739;
+    border: 0.25rem solid transparent;
+    outline: 0.125rem solid transparent;
+}
+
+.formitem{
+    margin-top: 2em;
+}
+
+.formlabel{
+    font-weight: 700;
+}
+
+.text:focus {
+    border: 0.25rem solid white;
+    outline: 0.125rem solid #009739;
+}
+
+.large {
+    font-size: 1.2rem;
+}
+
+.xlarge {
+    font-size: 2.1rem;
+}
+
+.title {
+    margin-bottom: 2em;
+}
+
+.resetpassword {
+    margin-top: 1em;   
+}
+
+.resetpassword a {
+    font-size: 0.9em;
+    color: #012169;
+}
+
+.click {
+    margin-top: 1.75rem;
+    background-color: #AFC7FE;
+    padding: 0.5rem;
+    font-family: "Lato";
+    font-size: 1.075rem;
+    font-weight: 400;
+    border: none;
+    box-shadow: #012169 0.125rem 0.125rem 0.125rem;
+    cursor: pointer;
+}
+
+.footer p {
+    margin-top: 3em;
+}
+
+.mt {
+    margin-top: 3em;
+}
+
+.mt2 {
+    margin-top: 6em;
+}
+
+
+#mainbulk {
+    padding: 3em;
+}
+
+.attorneylist {
+    display: flex;
+    flex-direction: column;
+    width: 50em;
+}
+
+.attorneyrow {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    margin-bottom: 0.5em;
+}
+
+.attorneyrow:hover {
+    background-color: #EBF1FF;
+}
+
+
+.attorneyrow p {
+    flex-grow: 1;   
+}
+
+.revoke {
+    flex-basis: 4em;
+    justify-self: flex-end;
+    background-color: #AFC7FE;
+    padding: 0.5rem;
+    font-family: "Lato";
+    font-size: 1rem;
+    font-weight: 400;
+    border: none;
+    box-shadow: #012169 0.125rem 0.125rem 0.125rem;
+    cursor: pointer;
+}
+
+#mainbulk .text {
+    width: 50em;
+}
+

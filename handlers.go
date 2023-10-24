@@ -1,10 +1,11 @@
-package main
+package safe
 
 import (
 	"encoding/hex"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 const cookieName = "safeSessionCookie"
@@ -32,6 +33,21 @@ func (s *Safe) UserHandleView(handle string) UserView {
 		view.Attorneys[n] = hex.EncodeToString(grantee[:])
 	}
 	return view
+}
+
+func (s *Safe) RevokePOAHandler(w http.ResponseWriter, r *http.Request) {
+	handle := s.Handle(r)
+	if handle == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	revoking := r.URL.Path
+	revoking = strings.Replace(revoking, "/revoke/", "", 1)
+	err := s.RevokePower(handle, revoking)
+	if err != nil {
+		log.Printf("error granting/revoking power: %v", err)
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *Safe) PoAHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +97,11 @@ func (s *Safe) RevokeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Safe) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	handle := s.Handle(r)
+	if handle != "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 	if err := s.templates.ExecuteTemplate(w, "login.html", ""); err != nil {
 		log.Println(err)
 	}
