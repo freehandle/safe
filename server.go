@@ -8,7 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/freehandle/breeze/consensus/chain"
 	"github.com/freehandle/breeze/socket"
+	"github.com/freehandle/breeze/util"
 	"github.com/freehandle/synergy/api"
 )
 
@@ -23,7 +25,15 @@ func NewServer(config SafeConfig, path string) chan error {
 	//_, safePK := crypto.RandomAsymetricKey()
 	conn, err := socket.Dial(config.AxeAddress, config.Credentials, config.AxeToken)
 	if err != nil {
-		log.Fatalf("could not connect to host: %v", err)
+		finalize <- fmt.Errorf("could not connect to axe host: %v", err)
+		return finalize
+	}
+
+	bytes := []byte{chain.MsgSyncRequest}
+	util.PutUint64(1, &bytes)
+	if err := conn.Send(bytes); err != nil {
+		finalize <- fmt.Errorf("could not send sync request to gateway host: %v", err)
+		return finalize
 	}
 
 	gatewayConn, err := socket.Dial(config.GatewayAddress, config.Credentials, config.GatewayToken)
@@ -37,11 +47,12 @@ func NewServer(config SafeConfig, path string) chan error {
 	}
 
 	safe := &Safe{
-		file:    usersFile,
-		epoch:   0,
-		conn:    gatewayConn,
-		users:   ReadUsers(usersFile),
-		Session: api.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), nil),
+		file:        usersFile,
+		epoch:       1,
+		conn:        gatewayConn,
+		users:       ReadUsers(usersFile),
+		Session:     api.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), nil),
+		credentials: config.Credentials,
 	}
 
 	for handle, user := range safe.users {
@@ -50,7 +61,8 @@ func NewServer(config SafeConfig, path string) chan error {
 
 	signal := make(chan *Signal)
 
-	go SelfProxyState(conn, signal)
+	//go SelfProxyState(conn, signal)
+	go SocialProtocolProxy(config.AxeAddress, config.AxeToken, config.Credentials, 1, signal)
 	go NewSynergyNode(safe, signal)
 
 	safe.templates = template.New("root")
@@ -82,7 +94,8 @@ func NewServer(config SafeConfig, path string) chan error {
 		Handler:      mux,
 		WriteTimeout: 2 * time.Second,
 	}
-
-	finalize <- srv.ListenAndServe()
+	go func() {
+		finalize <- srv.ListenAndServe()
+	}()
 	return finalize
 }

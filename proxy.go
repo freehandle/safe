@@ -4,9 +4,31 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/freehandle/breeze/crypto"
 	"github.com/freehandle/breeze/socket"
 	"github.com/freehandle/breeze/util"
+	"github.com/freehandle/cb/social"
 )
+
+func SocialProtocolProxy(address string, token crypto.Token, credentials crypto.PrivateKey, epoch uint64, signal chan *Signal) {
+	listener := social.SocialProtocolBlockListener(address, token, credentials, epoch)
+	for {
+		block := <-listener
+		if block != nil {
+
+			signal <- &Signal{
+				Signal: 0,
+				Data:   util.Uint64ToBytes(block.Epoch),
+			}
+			for _, action := range block.Actions {
+				signal <- &Signal{
+					Signal: 1,
+					Data:   action,
+				}
+			}
+		}
+	}
+}
 
 func SelfProxyState(conn *socket.SignedConnection, signal chan *Signal) {
 	for {

@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/freehandle/axe/attorney"
+	"github.com/freehandle/breeze/consensus/chain"
 	"github.com/freehandle/breeze/crypto"
 	"github.com/freehandle/breeze/util"
 	"github.com/freehandle/synergy/api"
@@ -27,12 +28,13 @@ type SafeConfig struct {
 }
 
 type Safe struct {
-	file      *os.File
-	epoch     uint64
-	conn      Gateway //*socket.SignedConnection
-	users     map[string]*User
-	Session   *api.CookieStore
-	templates *template.Template
+	file        *os.File
+	epoch       uint64
+	conn        Gateway //*socket.SignedConnection
+	users       map[string]*User
+	Session     *api.CookieStore
+	templates   *template.Template
+	credentials crypto.PrivateKey
 }
 
 func (s *Safe) CreateSession(handle string) string {
@@ -108,6 +110,11 @@ func (s *Safe) Send(data []byte) bool {
 		log.Print("no connection to send on")
 		return false
 	}
+	data = append([]byte{chain.MsgActionSubmit}, data...)
+	util.PutToken(s.credentials.PublicKey(), &data)
+	util.PutUint64(0, &data)
+	signature := s.credentials.Sign(data[1:])
+	util.PutSignature(signature, &data)
 	err := s.conn.Send(data)
 	if err != nil {
 		log.Printf("connection error", err)
@@ -128,7 +135,7 @@ func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
 	}
 	copy(token[:], attorneyBytes)
 	grant := attorney.GrantPowerOfAttorney{
-		Epoch:       0,
+		Epoch:       s.epoch,
 		Author:      user.Secret.PublicKey(),
 		Attorney:    token,
 		Fingerprint: []byte(fingerprint),
@@ -152,7 +159,7 @@ func (s *Safe) RevokePower(handle, grantee string) error {
 	}
 	copy(token[:], attorneyBytes)
 	grant := attorney.RevokePowerOfAttorney{
-		Epoch:    0,
+		Epoch:    s.epoch,
 		Author:   user.Secret.PublicKey(),
 		Attorney: token,
 	}
@@ -175,7 +182,7 @@ func (s *Safe) Signin(handle, password string) bool {
 		Attorneys: make([]crypto.Token, 0),
 	}
 	join := attorney.JoinNetwork{
-		Epoch:   0,
+		Epoch:   s.epoch,
 		Author:  token,
 		Handle:  handle,
 		Details: "",
