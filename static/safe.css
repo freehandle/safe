@@ -27,25 +27,25 @@ body {
 
 @font-face {
     font-family: 'Lato';
-    src: url('../static/Lato-Thin.ttf');
+    src: url('/static/Lato-Thin.ttf');
     font-weight: 100;
 }
 
 @font-face {
     font-family: 'Lato';
-    src: url('../static/Lato-Light.ttf');
+    src: url('/static/Lato-Light.ttf');
     font-weight: 300;
 }
 
 @font-face {
     font-family: 'Lato';
-    src: url('../static/Lato-Regular.ttf');
+    src: url('/static/Lato-Regular.ttf');
     font-weight: 400;
 }
 
 @font-face {
     font-family: 'Lato';
-    src: url('../static/Lato-Bold.ttf');
+    src: url('/static/Lato-Bold.ttf');
     font-weight: 700;
 }
 
