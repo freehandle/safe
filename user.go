@@ -1,8 +1,8 @@
 package safe
 
 import (
-	"github.com/freehandle/axe/attorney"
 	"github.com/freehandle/breeze/crypto"
+	"github.com/freehandle/handles/attorney"
 )
 
 type User struct {

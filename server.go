@@ -1,6 +1,7 @@
 package safe
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -9,14 +10,15 @@ import (
 	"time"
 
 	"github.com/freehandle/breeze/socket"
-	"github.com/freehandle/synergy/api"
+	"github.com/freehandle/breeze/util"
+	"github.com/freehandle/handles"
 )
 
 var templateFiles = []string{
 	"main", "grant", "revoke", "login", "signin",
 }
 
-func NewServer(config SafeConfig, path string) chan error {
+func NewServer(ctx context.Context, config SafeConfig, path string) chan error {
 
 	finalize := make(chan error, 2)
 
@@ -34,7 +36,7 @@ func NewServer(config SafeConfig, path string) chan error {
 	//	return finalize
 	//}
 
-	gatewayConn, err := socket.Dial(config.GatewayAddress, config.Credentials, config.GatewayToken)
+	gatewayConn, err := socket.Dial("localhost", config.Gateway.Addr, config.Credentials, config.Gateway.Token)
 	if err != nil {
 		log.Fatalf("could not connect to gateway: %v", err)
 	}
@@ -49,15 +51,34 @@ func NewServer(config SafeConfig, path string) chan error {
 		epoch:       1,
 		conn:        gatewayConn,
 		users:       ReadUsers(usersFile),
-		Session:     api.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), nil),
+		Session:     util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", path), 0),
 		credentials: config.Credentials,
 	}
 
-	signal := make(chan *Signal)
+	sources := socket.NewTrustedAgregator(ctx, "localhost", config.Credentials, 1, config.Providers, nil)
+	if sources == nil {
+		finalize <- fmt.Errorf("could not connect to providers")
+		return finalize
+	}
 
-	//go SelfProxyState(conn, signal)
-	go SocialProtocolProxy(config.AxeAddress, config.AxeToken, config.Credentials, 1, signal)
-	go NewSynergyNode(safe, signal)
+	blocks := handles.HandlesListener(ctx, sources)
+	go func() {
+		for {
+			block, ok := <-blocks
+			if !ok {
+				return
+			}
+			for _, grant := range block.Grant {
+				safe.IncorporateGrant(grant)
+			}
+			for _, revoke := range block.Revoke {
+				safe.IncorporateRevoke(revoke)
+			}
+			for _, join := range block.Join {
+				safe.IncorporateJoin(join)
+			}
+		}
+	}()
 
 	safe.templates = template.New("root")
 	files := make([]string, len(templateFiles))

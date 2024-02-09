@@ -10,28 +10,26 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/freehandle/axe/attorney"
-	"github.com/freehandle/breeze/consensus/chain"
+	"github.com/freehandle/breeze/consensus/messages"
 	"github.com/freehandle/breeze/crypto"
+	"github.com/freehandle/breeze/socket"
 	"github.com/freehandle/breeze/util"
-	"github.com/freehandle/synergy/api"
+	"github.com/freehandle/handles/attorney"
 )
 
 type SafeConfig struct {
-	GatewayAddress string
-	GatewayToken   crypto.Token
-	AxeAddress     string
-	AxeToken       crypto.Token
-	Port           int
-	Credentials    crypto.PrivateKey
+	Gateway     socket.TokenAddr
+	Providers   []socket.TokenAddr
+	Port        int
+	Credentials crypto.PrivateKey
 }
 
 type Safe struct {
 	file        *os.File
 	epoch       uint64
-	conn        Gateway //*socket.SignedConnection
+	conn        *socket.SignedConnection
 	users       map[string]*User
-	Session     *api.CookieStore
+	Session     *util.CookieStore
 	templates   *template.Template
 	credentials crypto.PrivateKey
 }
@@ -107,7 +105,7 @@ func (s *Safe) Send(data []byte) bool {
 		log.Print("no connection to send on")
 		return false
 	}
-	data = append([]byte{chain.MsgActionSubmit}, data...)
+	data = append([]byte{messages.MsgAction}, data...)
 	util.PutToken(s.credentials.PublicKey(), &data)
 	util.PutUint64(0, &data)
 	signature := s.credentials.Sign(data[1:])
