@@ -5,10 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/freehandle/breeze/consensus/messages"
 	"github.com/freehandle/breeze/crypto"
@@ -22,16 +20,18 @@ type SafeConfig struct {
 	Providers   []socket.TokenAddr
 	Port        int
 	Credentials crypto.PrivateKey
+	Path        string
+	HtmlPath    string
 }
 
 type Safe struct {
-	file        *os.File
-	epoch       uint64
-	conn        *socket.SignedConnection
-	users       map[string]*User
-	Session     *util.CookieStore
-	templates   *template.Template
-	credentials crypto.PrivateKey
+	vault     *Vault
+	actions   *SafeDatabase
+	epoch     uint64
+	gateway   *socket.SignedConnection
+	users     map[string]*User
+	Session   *util.CookieStore
+	templates *template.Template
 }
 
 func (s *Safe) CreateSession(handle string) string {
@@ -51,11 +51,7 @@ func (s *Safe) CreateSession(handle string) string {
 }
 
 func (s *Safe) CheckCredentials(handle, password string) bool {
-	user, ok := s.users[handle]
-	if !ok {
-		return false
-	}
-	return user.Password == password
+	return s.vault.Check(handle, password)
 }
 
 func (s *Safe) Handle(r *http.Request) string {
@@ -64,9 +60,9 @@ func (s *Safe) Handle(r *http.Request) string {
 		return ""
 	}
 	if token, ok := s.Session.Get(cookie.Value); ok {
-		for _, user := range s.users {
+		for handle, user := range s.users {
 			if user.Token.Equal(token) {
-				return user.Handle
+				return handle
 			}
 		}
 	}
@@ -101,16 +97,16 @@ func (s *Safe) IncorporateJoin(join *attorney.JoinNetwork) {
 }
 
 func (s *Safe) Send(data []byte) bool {
-	if s.conn == nil {
+	if s.gateway == nil {
 		log.Print("no connection to send on")
 		return false
 	}
 	data = append([]byte{messages.MsgAction}, data...)
-	util.PutToken(s.credentials.PublicKey(), &data)
+	util.PutToken(s.vault.Token(), &data)
 	util.PutUint64(0, &data)
-	signature := s.credentials.Sign(data[1:])
+	signature := s.vault.Secret().Sign(data[1:])
 	util.PutSignature(signature, &data)
-	err := s.conn.Send(data)
+	err := s.gateway.Send(data)
 	if err != nil {
 		log.Printf("connection error", err)
 		return false
@@ -119,7 +115,7 @@ func (s *Safe) Send(data []byte) bool {
 }
 
 func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
-	user, ok := s.users[handle]
+	user, ok := s.vault.handle[handle]
 	if !ok {
 		return errors.New("invalid user")
 	}
@@ -142,7 +138,7 @@ func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
 }
 
 func (s *Safe) RevokePower(handle, grantee string) error {
-	user, ok := s.users[handle]
+	user, ok := s.vault.handle[handle]
 	if !ok {
 		return errors.New("invalid user")
 	}
@@ -163,17 +159,10 @@ func (s *Safe) RevokePower(handle, grantee string) error {
 	return nil
 }
 
-func (s *Safe) Signin(handle, password string) bool {
-	if _, ok := s.users[handle]; ok {
+func (s *Safe) Signin(handle, password, email string) bool {
+	token, err := s.vault.NewUser(handle, password, email)
+	if err != nil {
 		return false
-	}
-	token, secret := crypto.RandomAsymetricKey()
-	s.users[handle] = &User{
-		Handle:    handle,
-		Password:  password,
-		Secret:    secret,
-		Token:     token,
-		Attorneys: make([]crypto.Token, 0),
 	}
 	join := attorney.JoinNetwork{
 		Epoch:   s.epoch,
@@ -181,53 +170,8 @@ func (s *Safe) Signin(handle, password string) bool {
 		Handle:  handle,
 		Details: "",
 	}
+	secret := s.vault.Secret()
 	join.Sign(secret)
 	data := join.Serialize()
-	bytes := make([]byte, 0)
-	util.PutSecret(secret, &bytes)
-	util.PutToken(token, &bytes)
-	util.PutString(handle, &bytes)
-	util.PutString(password, &bytes)
-
-	size := make([]byte, 0)
-	util.PutUint16(uint16(len(bytes)), &size)
-	bytes = append(size, bytes...)
-
-	s.file.Seek(0, 2)
-	if n, err := s.file.Write(bytes); n != len(bytes) {
-		panic(err)
-	}
-
 	return s.Send(data)
-}
-
-func ReadUsers(file *os.File) map[string]*User {
-	data, err := io.ReadAll(file)
-	if err != nil {
-		panic(err)
-	}
-	position := 0
-	users := make(map[string]*User)
-	for {
-		position = position + 2
-		var pk crypto.PrivateKey
-		var token crypto.Token
-		var handle string
-		var password string
-		pk, position = util.ParseSecret(data, position)
-		token, position = util.ParseToken(data, position)
-		handle, position = util.ParseString(data, position)
-		password, position = util.ParseString(data, position)
-		users[handle] = &User{
-			Handle:    handle,
-			Password:  password,
-			Secret:    pk,
-			Token:     token,
-			Attorneys: make([]crypto.Token, 0),
-		}
-		if position >= len(data) {
-			break
-		}
-	}
-	return users
 }

@@ -6,9 +6,6 @@ import (
 )
 
 type User struct {
-	Handle    string
-	Password  string
-	Secret    crypto.PrivateKey
 	Token     crypto.Token
 	Attorneys []crypto.Token
 	Confirmed bool

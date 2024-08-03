@@ -1,0 +1,18 @@
+{
+    "token": "ee164580347cde782ab9b5b428c5542b1ba068f20a7fe3e047d7bc6fae258e54",
+    "credentialsPath": "safe.pem",
+    "gateway": {
+        "address": "127.0.0.1",
+        "token": "496c77ab7ab66b7d54f5db5bfcbc9ae744ac869b8775b23b34ca6c8a553b6e2c"
+    },
+    "providers": [
+        {         
+            "address": "127.0.0.1",
+            "token": "f9873aa89738e81b06b0253d5a475d7f0b2d77397544f0232832b1064a91a3e6"
+        }
+    ],
+    "port": 80,
+    "adminPort": 7080,
+    "dataPath" : "."
+}
+

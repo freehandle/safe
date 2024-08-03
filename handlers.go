@@ -158,13 +158,14 @@ func (s *Safe) NewUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	handle := r.FormValue("handle")
 	password := r.FormValue("password")
+	email := r.FormValue("email")
 
 	_, ok := s.users[handle]
 	if ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	s.Signin(handle, password)
+	s.Signin(handle, password, email)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
