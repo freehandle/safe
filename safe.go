@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -168,6 +169,7 @@ func (s *Safe) RevokePower(handle, grantee string) error {
 }
 
 func (s *Safe) Signin(handle, password, email string) bool {
+	fmt.Println("signing in", handle, password, email)
 	token, err := s.vault.NewUser(handle, password, email)
 	if err != nil {
 		return false

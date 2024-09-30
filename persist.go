@@ -108,7 +108,7 @@ func (v *Vault) Token() crypto.Token {
 }
 
 func OpenVaultFromPassword(passwd []byte, path string) (*Vault, error) {
-	vault, err := util.OpenVaultFromPassword(passwd, path)
+	vault, err := util.OpenOrCreateVaultFromPassword(passwd, path)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ type SafeDatabase struct {
 }
 
 func OpenSafeDatabase(path string, indexer func([]byte) []crypto.Hash) (*SafeDatabase, error) {
-	file, err := os.OpenFile(path, os.O_RDWR, 0600)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
