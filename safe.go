@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -111,6 +110,7 @@ func (s *Safe) Send(data []byte) bool {
 		return false
 	}
 	data = append([]byte{messages.MsgAction}, data...)
+	// dress breeze payment
 	util.PutToken(s.vault.Token(), &data)
 	util.PutUint64(0, &data)
 	signature := s.vault.Secret().Sign(data[1:])
@@ -169,7 +169,6 @@ func (s *Safe) RevokePower(handle, grantee string) error {
 }
 
 func (s *Safe) Signin(handle, password, email string) bool {
-	fmt.Println("signing in", handle, password, email)
 	token, err := s.vault.NewUser(handle, password, email)
 	if err != nil {
 		return false
@@ -180,7 +179,7 @@ func (s *Safe) Signin(handle, password, email string) bool {
 		Handle:  handle,
 		Details: "",
 	}
-	secret := s.vault.Secret()
+	secret := s.vault.handle[handle].Secret
 	join.Sign(secret)
 	data := join.Serialize()
 	return s.Send(data)
