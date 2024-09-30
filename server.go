@@ -19,25 +19,98 @@ var templateFiles = []string{
 	"main", "grant", "revoke", "login", "signin",
 }
 
-func NewServer(ctx context.Context, config SafeConfig, passwd string) chan error {
+func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gateway Sender, receive chan []byte) chan error {
 	finalize := make(chan error, 2)
-	gatewayConn, err := socket.Dial("localhost", config.Gateway.Addr, config.Credentials, config.Gateway.Token)
+	safe, err := newServerFromSendReceiver(ctx, safeCfg, passwd, gateway, finalize)
+	if err != nil {
+		finalize <- err
+		return finalize
+	}
+
+	go func() {
+		for {
+			select {
+			case action, ok := <-receive:
+				if !ok {
+					return
+				}
+				switch attorney.Kind(action) {
+				case attorney.GrantPowerOfAttorneyType:
+					if grant := attorney.ParseGrantPowerOfAttorney(action); grant != nil {
+						safe.IncorporateGrant(grant)
+					}
+				case attorney.RevokePowerOfAttorneyType:
+					if revoke := attorney.ParseRevokePowerOfAttorney(action); revoke != nil {
+						safe.IncorporateRevoke(revoke)
+					}
+				case attorney.JoinNetworkType:
+					if join := attorney.ParseJoinNetwork(action); join != nil {
+						safe.IncorporateJoin(join)
+					}
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return finalize
+}
+
+func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passwd string) chan error {
+	finalize := make(chan error, 2)
+	gatewayConn, err := socket.Dial("localhost", cfg.Gateway.Addr, safeCfg.Credentials, cfg.Gateway.Token)
 	if err != nil {
 		finalize <- fmt.Errorf("could not connect to gateway host: %v", err)
 		return finalize
 	}
+	sources := socket.NewTrustedAgregator(ctx, "localhost", safeCfg.Credentials, 1, cfg.Providers, nil)
+	if sources == nil {
+		finalize <- fmt.Errorf("could not connect to providers")
+		return finalize
+	}
+	blocks := handles.HandlesListener(ctx, sources)
+	safe, err := newServerFromSendReceiver(ctx, safeCfg, passwd, gatewayConn, finalize)
+	if err != nil {
+		finalize <- err
+	}
+	go func() {
+		for {
+			select {
+			case block, ok := <-blocks:
+				if !ok {
+					return
+				}
+				for _, grant := range block.Grant {
+					safe.IncorporateGrant(grant)
+				}
+				for _, revoke := range block.Revoke {
+					safe.IncorporateRevoke(revoke)
+				}
+				for _, join := range block.Join {
+					safe.IncorporateJoin(join)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return finalize
+}
+
+func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd string, gateway Sender, finalize chan error) (*Safe, error) {
 	vault, err := OpenVaultFromPassword([]byte(passwd), fmt.Sprintf("%v/vault.dat", config.Path))
 	if err != nil {
-		finalize <- fmt.Errorf("could not open vault: %v", err)
-		return finalize
+		return nil, fmt.Errorf("could not open vault: %v", err)
 	}
 	safe := &Safe{
 		vault:   vault,
 		epoch:   1,
-		gateway: gatewayConn,
+		gateway: gateway,
 		users:   make(map[string]*User),
 		Session: util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", config.Path), 0),
 	}
+
 	for handle, user := range vault.handle {
 		safe.users[handle] = &User{
 			Token:     user.Secret.PublicKey(),
@@ -46,34 +119,8 @@ func NewServer(ctx context.Context, config SafeConfig, passwd string) chan error
 	}
 	safe.actions, err = OpenSafeDatabase(fmt.Sprintf("%v/safe.dat", config.Path), attorney.GetHashes)
 	if err != nil {
-		finalize <- fmt.Errorf("could not open safe database: %v", err)
-		return finalize
+		return nil, fmt.Errorf("could not open safe database: %v", err)
 	}
-
-	sources := socket.NewTrustedAgregator(ctx, "localhost", config.Credentials, 1, config.Providers, nil)
-	if sources == nil {
-		finalize <- fmt.Errorf("could not connect to providers")
-		return finalize
-	}
-
-	blocks := handles.HandlesListener(ctx, sources)
-	go func() {
-		for {
-			block, ok := <-blocks
-			if !ok {
-				return
-			}
-			for _, grant := range block.Grant {
-				safe.IncorporateGrant(grant)
-			}
-			for _, revoke := range block.Revoke {
-				safe.IncorporateRevoke(revoke)
-			}
-			for _, join := range block.Join {
-				safe.IncorporateJoin(join)
-			}
-		}
-	}()
 
 	safe.templates = template.New("root")
 	files := make([]string, len(templateFiles))
@@ -104,8 +151,15 @@ func NewServer(ctx context.Context, config SafeConfig, passwd string) chan error
 		Handler:      mux,
 		WriteTimeout: 2 * time.Second,
 	}
+
+	go func() {
+		<-ctx.Done()
+		srv.Shutdown(ctx)
+	}()
+
 	go func() {
 		finalize <- srv.ListenAndServe()
 	}()
-	return finalize
+
+	return safe, nil
 }

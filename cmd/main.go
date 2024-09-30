@@ -35,12 +35,20 @@ func (c Config) Check() error {
 	return nil
 }
 
-func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
-	return safe.SafeConfig{
+func ConfigToGatewayonfig(c Config, pk crypto.PrivateKey) safe.GatewayConfig {
+	return safe.GatewayConfig{
 		Gateway:     config.PeerToTokenAddr(c.Gateway),
 		Providers:   config.PeersToTokenAddr(c.Providers),
-		Port:        c.Port,
 		Credentials: pk,
+	}
+}
+
+func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
+	return safe.SafeConfig{
+		Credentials: pk,
+		Port:        c.Port,
+		Path:        c.DataPath,
+		HtmlPath:    "",
 	}
 }
 
@@ -72,6 +80,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	cfg := ConfigToSafeConfig(*specs, secret)
-	safe.NewServer(ctx, cfg, os.Args[2])
+	safeCfg := ConfigToSafeConfig(*specs, secret)
+	cfg := ConfigToGatewayonfig(*specs, secret)
+	safe.NewServer(ctx, safeCfg, cfg, os.Args[2])
 }

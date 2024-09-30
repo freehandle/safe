@@ -15,20 +15,28 @@ import (
 	"github.com/freehandle/handles/attorney"
 )
 
-type SafeConfig struct {
+type Sender interface {
+	Send([]byte) error
+}
+
+type GatewayConfig struct {
 	Gateway     socket.TokenAddr
 	Providers   []socket.TokenAddr
-	Port        int
+	Credentials crypto.PrivateKey
+}
+
+type SafeConfig struct {
 	Credentials crypto.PrivateKey
 	Path        string
 	HtmlPath    string
+	Port        int
 }
 
 type Safe struct {
 	vault     *Vault
 	actions   *SafeDatabase
 	epoch     uint64
-	gateway   *socket.SignedConnection
+	gateway   Sender
 	users     map[string]*User
 	Session   *util.CookieStore
 	templates *template.Template
