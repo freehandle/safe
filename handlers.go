@@ -2,6 +2,7 @@ package safe
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -136,10 +137,12 @@ func (s *Safe) CredentialsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := s.CreateSession(handle)
+	fmt.Println("cookie", url.QueryEscape(cookie))
 	if cookie == "" {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
+
 	httpCookie := &http.Cookie{
 		Name:     cookieName,
 		Value:    url.QueryEscape(cookie),

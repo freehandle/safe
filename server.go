@@ -34,6 +34,13 @@ func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gate
 				if !ok {
 					return
 				}
+				if len(action) == 0 {
+					continue
+				}
+				if action[0] == 0 {
+
+				}
+				action = action[1:]
 				switch attorney.Kind(action) {
 				case attorney.GrantPowerOfAttorneyType:
 					if grant := attorney.ParseGrantPowerOfAttorney(action); grant != nil {

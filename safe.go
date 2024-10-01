@@ -173,6 +173,7 @@ func (s *Safe) Signin(handle, password, email string) bool {
 	if err != nil {
 		return false
 	}
+	s.users[handle] = &User{token, make([]crypto.Token, 0), false}
 	join := attorney.JoinNetwork{
 		Epoch:   s.epoch,
 		Author:  token,
