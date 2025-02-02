@@ -111,11 +111,12 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 		return nil, fmt.Errorf("could not open vault: %v", err)
 	}
 	safe := &Safe{
-		vault:   vault,
-		epoch:   1,
-		gateway: gateway,
-		users:   make(map[string]*User),
-		Session: util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", config.Path), 0),
+		vault:      vault,
+		epoch:      1,
+		gateway:    gateway,
+		users:      make(map[string]*User),
+		Session:    util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", config.Path), 0),
+		serverName: config.ServerName,
 	}
 
 	for handle, user := range vault.handle {

@@ -39,7 +39,7 @@ func (s *Safe) UserHandleView(handle string) UserView {
 func (s *Safe) RevokePOAHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	revoking := r.URL.Path
@@ -48,13 +48,13 @@ func (s *Safe) RevokePOAHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("error granting/revoking power: %v", err)
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%v/", s.serverName), http.StatusSeeOther)
 }
 
 func (s *Safe) PoAHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	if err := r.ParseForm(); err != nil {
@@ -72,13 +72,13 @@ func (s *Safe) PoAHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("error granting/revoking power: %v", err)
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%v/", s.serverName), http.StatusSeeOther)
 }
 
 func (s *Safe) GrantHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	if err := s.templates.ExecuteTemplate(w, "grant.html", ""); err != nil {
@@ -89,7 +89,7 @@ func (s *Safe) GrantHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Safe) RevokeHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	if err := s.templates.ExecuteTemplate(w, "revoke.html", ""); err != nil {
@@ -100,7 +100,7 @@ func (s *Safe) RevokeHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Safe) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle != "" {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	if err := s.templates.ExecuteTemplate(w, "login.html", ""); err != nil {
@@ -117,7 +117,7 @@ func (s *Safe) SigninHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Safe) UserHandler(w http.ResponseWriter, r *http.Request) {
 	handle := s.Handle(r)
 	if handle == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	view := s.UserHandleView(handle)
@@ -133,13 +133,13 @@ func (s *Safe) CredentialsHandler(w http.ResponseWriter, r *http.Request) {
 	handle := r.FormValue("handle")
 	password := r.FormValue("password")
 	if !s.CheckCredentials(handle, password) {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	cookie := s.CreateSession(handle)
 	fmt.Println("cookie", url.QueryEscape(cookie))
 	if cookie == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 
@@ -152,7 +152,7 @@ func (s *Safe) CredentialsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, httpCookie)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%v/", s.serverName), http.StatusSeeOther)
 }
 
 func (s *Safe) NewUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -165,11 +165,11 @@ func (s *Safe) NewUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, ok := s.users[handle]
 	if ok {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
 	}
 	s.Signin(handle, password, email)
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 }
 
 func (s *Safe) SignoutHandlewr(w http.ResponseWriter, r *http.Request) {
@@ -182,5 +182,5 @@ func (s *Safe) SignoutHandlewr(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 }

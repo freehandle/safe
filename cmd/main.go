@@ -19,6 +19,7 @@ type Config struct {
 	Port            int           // json:"port"
 	AdminPort       int           // json:"adminPort"
 	DataPath        string        // json:"dataPath"
+	ServerName      string        // json:"serverName"
 }
 
 func (c Config) Check() error {
@@ -49,6 +50,7 @@ func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
 		Port:        c.Port,
 		Path:        c.DataPath,
 		HtmlPath:    "",
+		ServerName:  c.ServerName,
 	}
 }
 

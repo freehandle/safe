@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="/static/safe.css">    
+    <link rel="stylesheet" href="./static/safe.css">    
     <script src="/static/safe.js"></script>
   </head>
 <body>
   <div id="general">
     <div id="header">
       <div class="signinrow">
-          <a class="bold" href="/signout"> log out </a>
+          <a class="bold" href="./signout"> log out </a>
       </div>
     </div>
     <div id="mainbulk">
@@ -26,7 +26,7 @@
           {{range .Attorneys}}
             <div class="attorneyrow">
               <p class="attorney"> {{.}} </p>
-              <a class="revoke" href="/revoke/{{.}}">revoke</a>
+              <a class="revoke" href="./revoke/{{.}}">revoke</a>
             </div>
           {{end}}
         </div>
@@ -34,7 +34,7 @@
           add attorney
         </div>
         <div>
-          <form method="post" action="/poa">
+          <form method="post" action="./poa">
             <input name="poa" value="grant" type="hidden" readonly/>
             <div>
               <input id="attorney" class="text" name="attorney"/> 

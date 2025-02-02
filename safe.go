@@ -30,16 +30,18 @@ type SafeConfig struct {
 	Path        string
 	HtmlPath    string
 	Port        int
+	ServerName  string
 }
 
 type Safe struct {
-	vault     *Vault
-	actions   *SafeDatabase
-	epoch     uint64
-	gateway   Sender
-	users     map[string]*User
-	Session   *util.CookieStore
-	templates *template.Template
+	vault      *Vault
+	actions    *SafeDatabase
+	epoch      uint64
+	gateway    Sender
+	users      map[string]*User
+	Session    *util.CookieStore
+	templates  *template.Template
+	serverName string
 }
 
 func (s *Safe) CreateSession(handle string) string {
