@@ -170,6 +170,24 @@ func (s *Safe) RevokePower(handle, grantee string) error {
 	return nil
 }
 
+func (s *Safe) SigninWithToken(handle, password, email string) (bool, crypto.Token) {
+	token, err := s.vault.NewUser(handle, password, email)
+	if err != nil {
+		return false, crypto.ZeroToken
+	}
+	s.users[handle] = &User{token, make([]crypto.Token, 0), false}
+	join := attorney.JoinNetwork{
+		Epoch:   s.epoch,
+		Author:  token,
+		Handle:  handle,
+		Details: "",
+	}
+	secret := s.vault.handle[handle].Secret
+	join.Sign(secret)
+	data := join.Serialize()
+	return s.Send(data), token
+}
+
 func (s *Safe) Signin(handle, password, email string) bool {
 	token, err := s.vault.NewUser(handle, password, email)
 	if err != nil {

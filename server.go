@@ -19,12 +19,12 @@ var templateFiles = []string{
 	"main", "grant", "revoke", "login", "signin",
 }
 
-func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gateway Sender, receive chan []byte) chan error {
+func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gateway Sender, receive chan []byte) (chan error, *Safe) {
 	finalize := make(chan error, 2)
 	safe, err := newServerFromSendReceiver(ctx, safeCfg, passwd, gateway, finalize)
 	if err != nil {
 		finalize <- err
-		return finalize
+		return finalize, nil
 	}
 
 	go func() {
@@ -61,7 +61,7 @@ func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gate
 		}
 	}()
 
-	return finalize
+	return finalize, safe
 }
 
 func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passwd string) chan error {
