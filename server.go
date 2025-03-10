@@ -163,6 +163,8 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 	go func() {
 		<-ctx.Done()
 		srv.Shutdown(ctx)
+		vault.Close()
+		log.Print("safe server shutdown")
 	}()
 
 	go func() {

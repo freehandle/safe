@@ -48,6 +48,10 @@ type Vault struct {
 	handle map[string]*UserSecret
 }
 
+func (v *Vault) Close() {
+	v.vault.Close()
+}
+
 func (v *Vault) Check(handle, password string) bool {
 	hashed := crypto.Hasher([]byte(password))
 	if user, ok := v.handle[handle]; ok {

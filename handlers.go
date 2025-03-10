@@ -137,7 +137,7 @@ func (s *Safe) CredentialsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := s.CreateSession(handle)
-	fmt.Println("cookie", url.QueryEscape(cookie))
+	//fmt.Println("cookie", url.QueryEscape(cookie))
 	if cookie == "" {
 		http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 		return
