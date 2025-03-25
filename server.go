@@ -38,7 +38,7 @@ func NewLocalServer(ctx context.Context, safeCfg SafeConfig, passwd string, gate
 					continue
 				}
 				if action[0] == 0 {
-
+					continue
 				}
 				action = action[1:]
 				switch attorney.Kind(action) {
