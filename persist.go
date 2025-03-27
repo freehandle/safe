@@ -149,6 +149,14 @@ func (v *Vault) NewUser(handle, password, email string) (crypto.Token, error) {
 	return token, nil
 }
 
+// func (v *Vault) ResetPassword(handle, newpassword string) bool {
+// 	if usrsecret, ok := v.handle[handle]; ok {
+// 		usrsecret.Password = crypto.Hasher([]byte(newpassword))
+// 		return true
+// 	}
+
+// }
+
 type Database interface {
 	SaveAction(msg []byte) error
 	LoadIndexedActions(hash crypto.Hash) ([][]byte, error)
