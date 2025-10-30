@@ -5,21 +5,30 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/freehandle/breeze/crypto"
 	"github.com/freehandle/breeze/middleware/config"
 	"github.com/freehandle/safe"
 )
 
+type SimpleProviderConfig struct {
+	Path     string
+	Name     string
+	Interval int64
+}
+
 type Config struct {
-	Token           string        // json:"token"
-	CredentialsPath string        // json:"credentialsPath"
-	Gateway         config.Peer   // json:"gateway"
-	Providers       []config.Peer // json:"providers"
-	Port            int           // json:"port"
-	AdminPort       int           // json:"adminPort"
-	DataPath        string        // json:"dataPath"
-	ServerName      string        // json:"serverName"
+	Token           string                // json:"token"
+	CredentialsPath string                // json:"credentialsPath"
+	Gateway         config.Peer           // json:"gateway"
+	Providers       []config.Peer         // json:"providers"
+	Port            int                   // json:"port"
+	AdminPort       int                   // json:"adminPort"
+	RestAPIPort     int                   // json:"restAPIPort"
+	DataPath        string                // json:"dataPath"
+	ServerName      string                // json:"serverName"
+	SimpleProvider  *SimpleProviderConfig // json:"simpleProvider"
 }
 
 func (c Config) Check() error {
@@ -37,11 +46,20 @@ func (c Config) Check() error {
 }
 
 func ConfigToGatewayonfig(c Config, pk crypto.PrivateKey) safe.GatewayConfig {
-	return safe.GatewayConfig{
+	cfg := safe.GatewayConfig{
 		Gateway:     config.PeerToTokenAddr(c.Gateway),
-		Providers:   config.PeersToTokenAddr(c.Providers),
 		Credentials: pk,
 	}
+	if c.SimpleProvider == nil {
+		cfg.Providers = config.PeersToTokenAddr(c.Providers)
+	} else {
+		cfg.Simple = &safe.SimpleBlockProvider{
+			Path:     c.SimpleProvider.Path,
+			Name:     c.SimpleProvider.Name,
+			Interval: time.Duration(c.SimpleProvider.Interval) * time.Second,
+		}
+	}
+	return cfg
 }
 
 func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
@@ -49,7 +67,7 @@ func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
 		Credentials: pk,
 		Port:        c.Port,
 		Path:        c.DataPath,
-		HtmlPath:    "",
+		HtmlPath:    "../",
 		ServerName:  c.ServerName,
 	}
 }
@@ -84,5 +102,6 @@ func main() {
 	}
 	safeCfg := ConfigToSafeConfig(*specs, secret)
 	cfg := ConfigToGatewayonfig(*specs, secret)
-	safe.NewServer(ctx, safeCfg, cfg, os.Args[2])
+	err = <-safe.NewServer(ctx, safeCfg, cfg, os.Args[2])
+	fmt.Println(err)
 }

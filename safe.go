@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/freehandle/breeze/consensus/messages"
 	"github.com/freehandle/breeze/crypto"
@@ -19,10 +20,17 @@ type Sender interface {
 	Send([]byte) error
 }
 
+type SimpleBlockProvider struct {
+	Path     string
+	Name     string
+	Interval time.Duration
+}
+
 type GatewayConfig struct {
 	Gateway     socket.TokenAddr
 	Providers   []socket.TokenAddr
 	Credentials crypto.PrivateKey
+	Simple      *SimpleBlockProvider
 }
 
 type SafeConfig struct {
@@ -30,6 +38,7 @@ type SafeConfig struct {
 	Path        string
 	HtmlPath    string
 	Port        int
+	RestAPIPort int
 	ServerName  string
 }
 
@@ -58,6 +67,10 @@ func (s *Safe) CreateSession(handle string) string {
 	cookie := hex.EncodeToString(seed)
 	s.Session.Set(token, cookie, s.epoch)
 	return cookie
+}
+
+func (s *Safe) Email(handle string) string {
+	return s.vault.HandleToEmail(handle)
 }
 
 func (s *Safe) CheckCredentials(handle, password string) bool {
@@ -117,9 +130,9 @@ func (s *Safe) Send(data []byte) bool {
 	util.PutUint64(0, &data)
 	signature := s.vault.Secret().Sign(data[1:])
 	util.PutSignature(signature, &data)
-	err := s.gateway.Send(data)
+	err := s.gateway.Send(data[1:]) // gambiarra para converser com o local do simple
 	if err != nil {
-		log.Printf("connection error", err)
+		log.Printf("connection error: %v\n", err)
 		return false
 	}
 	return true

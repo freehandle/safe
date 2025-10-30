@@ -71,13 +71,22 @@ func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passw
 		finalize <- fmt.Errorf("could not connect to gateway host: %v", err)
 		return finalize
 	}
-	sources := socket.NewTrustedAgregator(ctx, "localhost", safeCfg.Credentials, 1, cfg.Providers, nil)
-	if sources == nil {
-		finalize <- fmt.Errorf("could not connect to providers")
-		return finalize
+	var blocks chan *handles.HandlesBlock
+	if cfg.Simple == nil {
+		sources := socket.NewTrustedAgregator(ctx, "localhost", safeCfg.Credentials, 1, cfg.Providers, nil)
+		if sources == nil {
+			finalize <- fmt.Errorf("could not connect to providers")
+			return finalize
+		}
+		blocks = handles.HandlesListener(ctx, sources)
+	} else {
+		blocks = handles.LocalHandleListener(ctx, cfg.Simple.Path, cfg.Simple.Name, cfg.Simple.Interval)
 	}
-	blocks := handles.HandlesListener(ctx, sources)
 	safe, err := newServerFromSendReceiver(ctx, safeCfg, passwd, gatewayConn, finalize)
+
+	if safeCfg.RestAPIPort != 0 {
+		go NewSafeRestAPI(safeCfg.RestAPIPort, safe)
+	}
 	if err != nil {
 		finalize <- err
 	}

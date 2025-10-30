@@ -60,6 +60,13 @@ func (v *Vault) Check(handle, password string) bool {
 	return false
 }
 
+func (v *Vault) HandleToEmail(handle string) string {
+	if user, ok := v.handle[handle]; ok && user != nil {
+		return user.Email
+	}
+	return ""
+}
+
 func (v *Vault) FindHandle(handle, email string) *UserSecret {
 	if user, ok := v.handle[handle]; ok {
 		if user.Email == email {

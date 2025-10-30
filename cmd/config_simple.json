@@ -1,0 +1,17 @@
+{
+    "token": "ee164580347cde782ab9b5b428c5542b1ba068f20a7fe3e047d7bc6fae258e54",
+    "credentialsPath": "safe.pem",
+    "gateway": {
+        "address": "127.0.0.1:7000",
+        "token": "68eded260637f8c71b62fb5c547c294a3a09b21808d4b33456f58e1cb6eed6e4"
+    },
+    "port": 8089,
+    "adminPort": 7080,
+    "dataPath" : ".",
+    "simpleProvider": {
+        "path": "/home/rmdamiao/go/src/github.com/freehandle/breeze/cmd/local",
+        "name": "blocos",
+        "interval": 1
+    }
+}
+
