@@ -12,13 +12,9 @@ replace github.com/freehandle/cb => ../cb
 
 replace github.com/freehandle/synergy => ../synergy
 
-require (
-	github.com/freehandle/breeze v0.0.0-20240209232640-69f181076b42
-	github.com/freehandle/synergy v0.0.0-00010101000000-000000000000
-)
+require github.com/freehandle/breeze v0.0.0-20240209232640-69f181076b42
 
 require (
 	github.com/freehandle/handles v0.0.0-00010101000000-000000000000
 	github.com/freehandle/papirus v0.0.0-20240109003453-7c1dc112a42b // indirect
-	github.com/gomarkdown/markdown v0.0.0-20240723152757-afa4a469d4f9 // indirect
 )

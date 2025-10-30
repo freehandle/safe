@@ -3,7 +3,7 @@
     "credentialsPath": "safe.pem",
     "gateway": {
         "address": "127.0.0.1:7000",
-        "token": "68eded260637f8c71b62fb5c547c294a3a09b21808d4b33456f58e1cb6eed6e4"
+        "token": "aae31012916359a0278dcc50eff132ec99576650f257cd066ef6be77ac172fa2"
     },
     "port": 8089,
     "adminPort": 7080,

@@ -99,12 +99,15 @@ func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passw
 				}
 				for _, grant := range block.Grant {
 					safe.IncorporateGrant(grant)
+					fmt.Printf("%+v\n", grant)
 				}
 				for _, revoke := range block.Revoke {
 					safe.IncorporateRevoke(revoke)
+					fmt.Printf("%+v\n", revoke)
 				}
 				for _, join := range block.Join {
 					safe.IncorporateJoin(join)
+					fmt.Printf("%+v\n", join)
 				}
 			case <-ctx.Done():
 				return
