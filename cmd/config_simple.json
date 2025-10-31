@@ -3,13 +3,14 @@
     "credentialsPath": "safe.pem",
     "gateway": {
         "address": "127.0.0.1:7000",
-        "token": "aae31012916359a0278dcc50eff132ec99576650f257cd066ef6be77ac172fa2"
+        "token": "0bd6893855c03fb2103e52dd59de7425b534e26422f3ab26a46b2277f00436d4"
     },
     "port": 8089,
     "adminPort": 7080,
     "dataPath" : ".",
+    "restAPIPort": 8090,
     "simpleProvider": {
-        "path": "/home/rmdamiao/go/src/github.com/freehandle/breeze/cmd/local",
+        "path": "/home/rmdamiao/go/src/github.com/freehandle/handles/cmd/proxy-handles",
         "name": "blocos",
         "interval": 1
     }

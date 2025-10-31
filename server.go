@@ -80,11 +80,13 @@ func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passw
 		}
 		blocks = handles.HandlesListener(ctx, sources)
 	} else {
+		fmt.Println("Using simple file-based handle listener")
 		blocks = handles.LocalHandleListener(ctx, cfg.Simple.Path, cfg.Simple.Name, cfg.Simple.Interval)
 	}
 	safe, err := newServerFromSendReceiver(ctx, safeCfg, passwd, gatewayConn, finalize)
 
 	if safeCfg.RestAPIPort != 0 {
+		fmt.Print("vamos la...............")
 		go NewSafeRestAPI(safeCfg.RestAPIPort, safe)
 	}
 	if err != nil {
@@ -109,6 +111,7 @@ func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passw
 					safe.IncorporateJoin(join)
 					fmt.Printf("%+v\n", join)
 				}
+				safe.epoch = block.Epoch
 			case <-ctx.Done():
 				return
 			}

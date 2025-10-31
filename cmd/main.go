@@ -69,6 +69,7 @@ func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
 		Path:        c.DataPath,
 		HtmlPath:    "../",
 		ServerName:  c.ServerName,
+		RestAPIPort: c.RestAPIPort,
 	}
 }
 
