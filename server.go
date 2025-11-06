@@ -101,16 +101,19 @@ func NewServer(ctx context.Context, safeCfg SafeConfig, cfg GatewayConfig, passw
 				}
 				for _, grant := range block.Grant {
 					safe.IncorporateGrant(grant)
-					fmt.Printf("%+v\n", grant)
+					fmt.Println(attorney.ToString(grant.Serialize()))
+					fmt.Println("---")
 				}
 				for _, revoke := range block.Revoke {
 					safe.IncorporateRevoke(revoke)
-					fmt.Printf("%+v\n", revoke)
+					fmt.Println(attorney.ToString(revoke.Serialize()))
+					fmt.Println("---")
 				}
 				for _, join := range block.Join {
 					safe.IncorporateJoin(join)
-					fmt.Printf("%+v\n", join)
+					fmt.Printf(attorney.ToString(join.Serialize()))
 				}
+
 				safe.epoch = block.Epoch
 			case <-ctx.Done():
 				return
@@ -132,6 +135,7 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 		users:      make(map[string]*User),
 		Session:    util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", config.Path), 0),
 		serverName: config.ServerName,
+		pending:    make(map[string]*attorney.GrantPowerOfAttorney),
 	}
 
 	for handle, user := range vault.handle {
@@ -168,7 +172,7 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 	mux.HandleFunc("/revoke/", safe.RevokePOAHandler)
 	mux.HandleFunc("/poa", safe.PoAHandler)
 	mux.HandleFunc("/signout", safe.SignoutHandlewr)
-
+	mux.HandleFunc("/confirm/", safe.ConfirmHandler)
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("localhost:%v", config.Port),
 		Handler:      mux,

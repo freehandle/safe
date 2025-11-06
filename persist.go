@@ -67,6 +67,13 @@ func (v *Vault) HandleToEmail(handle string) string {
 	return ""
 }
 
+func (v *Vault) HandleToEmailAndToken(handle string) (string, crypto.Token) {
+	if user, ok := v.handle[handle]; ok && user != nil {
+		return user.Email, user.Secret.PublicKey()
+	}
+	return "", crypto.ZeroToken
+}
+
 func (v *Vault) FindHandle(handle, email string) *UserSecret {
 	if user, ok := v.handle[handle]; ok {
 		if user.Email == email {

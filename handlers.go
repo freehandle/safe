@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/freehandle/breeze/crypto"
+	"github.com/freehandle/handles/attorney"
 )
 
 const cookieName = "safeSessionCookie"
@@ -16,6 +19,14 @@ type UserView struct {
 	Attorneys []string
 	Error     string
 	Live      bool
+}
+
+func (s *Safe) UserAttorneys(handle string) []crypto.Token {
+	user, ok := s.users[handle]
+	if !ok {
+		return nil
+	}
+	return user.Attorneys
 }
 
 func (s *Safe) UserHandleView(handle string) UserView {
@@ -34,6 +45,38 @@ func (s *Safe) UserHandleView(handle string) UserView {
 		view.Attorneys[n] = hex.EncodeToString(grantee[:])
 	}
 	return view
+}
+
+func (s *Safe) NewPending(uniqueURL string, grant *attorney.GrantPowerOfAttorney) {
+	s.pending[uniqueURL] = grant
+}
+
+func (s *Safe) ConfirmHandler(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/confirm/")
+	if len(parts) != 2 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	grant, ok := s.pending[parts[1]]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	token := grant.Author
+	handle := ""
+	for h, user := range s.users {
+		if user.Token.Equal(token) {
+			handle = h
+			break
+		}
+	}
+	if handle == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	s.Send(grant.Serialize())
+	delete(s.pending, r.URL.Path)
+	http.Redirect(w, r, fmt.Sprintf("%v/login", s.serverName), http.StatusSeeOther)
 }
 
 func (s *Safe) RevokePOAHandler(w http.ResponseWriter, r *http.Request) {

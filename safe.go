@@ -51,6 +51,7 @@ type Safe struct {
 	Session    *util.CookieStore
 	templates  *template.Template
 	serverName string
+	pending    map[string]*attorney.GrantPowerOfAttorney
 }
 
 func (s *Safe) CreateSession(handle string) string {
@@ -71,6 +72,10 @@ func (s *Safe) CreateSession(handle string) string {
 
 func (s *Safe) Email(handle string) string {
 	return s.vault.HandleToEmail(handle)
+}
+
+func (s *Safe) EmailAndToken(handle string) (string, crypto.Token) {
+	return s.vault.HandleToEmailAndToken(handle)
 }
 
 func (s *Safe) CheckCredentials(handle, password string) bool {
@@ -136,6 +141,28 @@ func (s *Safe) Send(data []byte) bool {
 		return false
 	}
 	return true
+}
+
+func (s *Safe) GrantAction(handle, grantee string) *attorney.GrantPowerOfAttorney {
+	user, ok := s.vault.handle[handle]
+	if !ok {
+		return nil
+	}
+	var token crypto.Token
+	attorneyBytes, _ := hex.DecodeString(grantee)
+	if len(attorneyBytes) != crypto.TokenSize {
+		return nil
+	}
+	copy(token[:], attorneyBytes)
+	fingerprint := crypto.EncodeHash(crypto.HashToken(token))
+	grant := attorney.GrantPowerOfAttorney{
+		Epoch:       s.epoch,
+		Author:      user.Secret.PublicKey(),
+		Attorney:    token,
+		Fingerprint: []byte(fingerprint),
+	}
+	grant.Sign(user.Secret)
+	return &grant
 }
 
 func (s *Safe) GrantPower(handle, grantee, fingerprint string) error {
