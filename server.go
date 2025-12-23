@@ -138,6 +138,12 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 		pending:    make(map[string]*attorney.GrantPowerOfAttorney),
 	}
 
+	if safe.serverName == "" {
+		safe.address = fmt.Sprintf("localhost:%d", config.Port)
+	} else {
+		safe.address = safe.serverName
+	}
+
 	for handle, user := range vault.handle {
 		safe.users[handle] = &User{
 			Token:     user.Secret.PublicKey(),

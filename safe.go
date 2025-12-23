@@ -52,6 +52,7 @@ type Safe struct {
 	templates  *template.Template
 	serverName string
 	pending    map[string]*attorney.GrantPowerOfAttorney
+	address    string
 }
 
 func (s *Safe) CreateSession(handle string) string {

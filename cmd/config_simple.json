@@ -10,7 +10,7 @@
     "dataPath" : ".",
     "restAPIPort": 8090,
     "simpleProvider": {
-        "path": "/home/rmdamiao/go/src/github.com/freehandle/handles/cmd/proxy-handles",
+        "path": "/home/lienko/setembro/handles/cmd/proxy-handles",
         "name": "blocos",
         "interval": 1
     }

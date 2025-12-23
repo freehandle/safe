@@ -9,12 +9,7 @@ import (
 	"github.com/freehandle/breeze/crypto"
 )
 
-const msgConfirmation = `
-Foi requerida a autorização de uso do seu handle %v para a aplicação %v.
-Se não foi você quem requisitou, por favor, ignore esta mensagem.
-Para autorizar, por favor, clique no link abaixo:
-http://%s/confirm/%s
-`
+const msgConfirmation = `http://%s/confirm/%s`
 
 type RestAPI struct {
 	Safe *Safe
@@ -44,6 +39,7 @@ type APIResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
 	Token   string `json:"token,omitempty"`
+	Verify  string `json:"verify,omitempty"`
 }
 
 func (rest *RestAPI) userExists(handle string) bool {
@@ -145,8 +141,7 @@ func (rest *RestAPI) handleAPI(w http.ResponseWriter, r *http.Request) {
 	if rest.userExists(req.Handle) {
 		token, _ := crypto.RandomAsymetricKey()
 		secret := token.Hex()
-		msg := fmt.Sprintf(msgConfirmation, req.Handle, req.App, "localhost:7000", secret)
-		fmt.Println("Confirmation message:", msg)
+		msg := fmt.Sprintf("http://%s/confirm/%s", rest.Safe.address, secret)
 		grant := rest.Safe.GrantAction(req.Handle, req.AttorneyToken)
 		rest.Safe.NewPending(secret, grant)
 		w.WriteHeader(http.StatusOK)
@@ -155,6 +150,7 @@ func (rest *RestAPI) handleAPI(w http.ResponseWriter, r *http.Request) {
 			Status:  "existente",
 			Message: email,
 			Token:   token.String(),
+			Verify:  msg,
 		})
 		return
 	}
