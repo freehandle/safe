@@ -1,6 +1,4 @@
-**/.bin
-**/.dat
-**/.pem
 *.dat
 *.pem
+*.bin
 cmd/cmd
