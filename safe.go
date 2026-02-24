@@ -40,6 +40,7 @@ type SafeConfig struct {
 	Port        int
 	RestAPIPort int
 	ServerName  string
+	Address     string
 }
 
 type Safe struct {

@@ -136,12 +136,11 @@ func newServerFromSendReceiver(ctx context.Context, config SafeConfig, passwd st
 		Session:    util.OpenCokieStore(fmt.Sprintf("%v/cookies.dat", config.Path), 0),
 		serverName: config.ServerName,
 		pending:    make(map[string]*attorney.GrantPowerOfAttorney),
+		address:    config.Address,
 	}
 
 	if safe.serverName == "" {
 		safe.address = fmt.Sprintf("localhost:%d", config.Port)
-	} else {
-		safe.address = safe.serverName
 	}
 
 	for handle, user := range vault.handle {

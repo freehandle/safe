@@ -29,6 +29,7 @@ type Config struct {
 	DataPath        string                // json:"dataPath"
 	ServerName      string                // json:"serverName"
 	SimpleProvider  *SimpleProviderConfig // json:"simpleProvider"
+	Address         string                // json:"adress"
 }
 
 func (c Config) Check() error {
@@ -70,6 +71,7 @@ func ConfigToSafeConfig(c Config, pk crypto.PrivateKey) safe.SafeConfig {
 		HtmlPath:    "../",
 		ServerName:  c.ServerName,
 		RestAPIPort: c.RestAPIPort,
+		Address:     c.Address,
 	}
 }
 
