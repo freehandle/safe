@@ -9,7 +9,7 @@ import (
 	"github.com/freehandle/breeze/crypto"
 )
 
-const msgConfirmation = `http://%s/confirm/%s`
+// const msgConfirmation = `http://%s/confirm/%s`
 
 type RestAPI struct {
 	Safe *Safe
@@ -142,6 +142,9 @@ func (rest *RestAPI) handleAPI(w http.ResponseWriter, r *http.Request) {
 		token, _ := crypto.RandomAsymetricKey()
 		secret := token.Hex()
 		msg := fmt.Sprintf("http://%s/confirm/%s", rest.Safe.address, secret)
+		if rest.Safe.serverName != "" {
+			msg = fmt.Sprintf("http://%s/%sconfirm/%s", rest.Safe.address, rest.Safe.serverName, secret)
+		}
 		grant := rest.Safe.GrantAction(req.Handle, req.AttorneyToken)
 		rest.Safe.NewPending(secret, grant)
 		w.WriteHeader(http.StatusOK)
